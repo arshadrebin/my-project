@@ -1,13 +1,12 @@
 deploy:
-  name: Deploy to EC2 (${{ github.event_name == 'push' && 'dev' || github.event.inputs.environment }})
+  name: Deploy to EC2
   needs: build
 
-  if: |
+  # Run automatically on push OR manually when Run Deploy is true
+  if: >
     github.event_name == 'push' ||
-    (
-      github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.run_deploy == 'true'
-    )
+    (github.event_name == 'workflow_dispatch' &&
+    github.event.inputs.run_deploy == 'true')
 
   runs-on: [self-hosted, linux]
 
@@ -21,13 +20,13 @@ deploy:
 
     - name: Show deployment details
       run: |
+        echo "Trigger      : ${{ github.event_name }}"
         if [ "${{ github.event_name }}" = "push" ]; then
-          echo "Environment : dev"
+          echo "Environment  : dev"
         else
-          echo "Environment : ${{ github.event.inputs.environment }}"
+          echo "Environment  : ${{ github.event.inputs.environment }}"
         fi
-
-        echo "Artifact : ${{ needs.build.outputs.artifact_name }}"
+        echo "Artifact     : ${{ needs.build.outputs.artifact_name }}"
 
     - name: Select target host
       id: target
@@ -35,11 +34,9 @@ deploy:
         if [ "${{ github.event_name }}" = "push" ]; then
           echo "host=${{ secrets.EC2_HOST_DEV }}" >> "$GITHUB_OUTPUT"
           echo "app_env=dev" >> "$GITHUB_OUTPUT"
-
         elif [ "${{ github.event.inputs.environment }}" = "prod" ]; then
           echo "host=${{ secrets.EC2_HOST_PROD }}" >> "$GITHUB_OUTPUT"
           echo "app_env=prod" >> "$GITHUB_OUTPUT"
-
         else
           echo "host=${{ secrets.EC2_HOST_DEV }}" >> "$GITHUB_OUTPUT"
           echo "app_env=dev" >> "$GITHUB_OUTPUT"
@@ -55,7 +52,7 @@ deploy:
       run: |
         set -euo pipefail
 
-        echo "$SSH_KEY" > deploy_key.pem
+        printf "%s" "$SSH_KEY" > deploy_key.pem
         chmod 600 deploy_key.pem
 
         SSH="ssh -o StrictHostKeyChecking=no -i deploy_key.pem"
@@ -71,13 +68,13 @@ deploy:
 
         rm -f deploy_key.pem
 
-    - name: Smoke test
+    - name: Smoke test deployed app
       env:
         SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         SSH_USER: ${{ secrets.EC2_USER }}
         HOST: ${{ steps.target.outputs.host }}
       run: |
-        echo "$SSH_KEY" > deploy_key.pem
+        printf "%s" "$SSH_KEY" > deploy_key.pem
         chmod 600 deploy_key.pem
 
         ssh -o StrictHostKeyChecking=no -i deploy_key.pem \
