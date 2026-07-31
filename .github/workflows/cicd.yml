@@ -129,13 +129,19 @@ jobs:
   # with run_deploy = true. Uses a GitHub Environment
   # (dev or prod) so prod can require a manual approval.
   # ==========================================================
-  deploy:
-    name: Deploy to EC2 (${{ github.event.inputs.environment }})
-    needs: build
-    if: >
-      github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.run_deploy == 'true'
-    runs-on: [ self-hosted, linux ]
+ - name: Select target host
+  id: target
+  run: |
+    if [ "${{ github.event_name }}" = "push" ]; then
+      echo "host=${{ secrets.EC2_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+      echo "app_env=dev" >> "$GITHUB_OUTPUT"
+    elif [ "${{ github.event.inputs.environment }}" = "prod" ]; then
+      echo "host=${{ secrets.EC2_HOST_PROD }}" >> "$GITHUB_OUTPUT"
+      echo "app_env=prod" >> "$GITHUB_OUTPUT"
+    else
+      echo "host=${{ secrets.EC2_HOST_DEV }}" >> "$GITHUB_OUTPUT"
+      echo "app_env=dev" >> "$GITHUB_OUTPUT"
+    fi
 
     # This maps to Settings → Environments. Add "prod" with a
     # required reviewer to force an approval before prod deploys.
