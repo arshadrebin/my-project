@@ -13,8 +13,8 @@
 //  Your change will appear on the deployed app at:  GET /
 // ------------------------------------------------------------
 
-const RELEASE_NAME = 'first-release';        // <-- CHANGE ME
-const BUILD_MESSAGE = 'Hello from the pipeline!';  // <-- CHANGE ME
+const RELEASE_NAME = 'first-secondrelease';        // <-- CHANGE ME
+const BUILD_MESSAGE = 'Hello hi from the pipeline!';  // <-- CHANGE ME
 
 // ------------------------------------------------------------
 //  👆👆👆  STOP EDITING BELOW THIS LINE  👆👆👆
